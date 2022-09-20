@@ -17,13 +17,12 @@ fn main() -> anyhow::Result<()> {
 		return Ok(());
 	}
 
-	if let Ok(mut grid) = grid::Grid::try_from(args.path) {
-		println!(
-			"Completed execution after {} steps",
+	match grid::Grid::try_from(args.path) {
+		Ok(mut grid) => println!(
+			"[execution completed after {} steps]",
 			parser::interpret(&mut grid, args.ascii, args.debug)
-		);
-	} else {
-		eprintln!("Could not parse the script, is it formatted correctly?");
+		),
+		Err(e) => eprintln!("error while parsing script:\n{}", e),
 	}
 
 	Ok(())

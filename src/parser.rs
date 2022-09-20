@@ -7,7 +7,7 @@ use crate::token::Token;
 /// Gets a character (ascii=true) or an integer (ascii=false) from stdin
 fn input(ascii: bool) -> u32 {
 	loop {
-		print!("input {}: ", if ascii { "character" } else { "integer" });
+		print!("{} > ", if ascii { "character" } else { "integer" });
 
 		io::stdout().flush().unwrap();
 
@@ -33,7 +33,7 @@ fn input(ascii: bool) -> u32 {
 /// Prints the value to stdout (as a char if ascii=true)
 fn output(value: u32, ascii: bool) {
 	if ascii {
-		println!("baer says {}", char::from_u32(value).unwrap_or('?'));
+		println!("{}", char::from_u32(value).unwrap_or('?'));
 	} else {
 		println!("baer says {}", value);
 	}
@@ -112,12 +112,7 @@ pub fn interpret(grid: &mut Grid, ascii: bool, debug: bool) -> u32 {
 		grid.y = y;
 
 		if debug {
-			println!("x={}, y={}", x, y);
-			println!("{}", grid);
-			println!(
-				"{}",
-				grid.data.iter().map(|v| v.to_string()).collect::<String>()
-			);
+			todo!("create a nice debugger tui");
 		}
 
 		let value = grid.get_value();

@@ -89,6 +89,7 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 		let mut line_number: usize = 0;
 		let mut line_count: usize = 0;
 		let mut prev_line_length: usize = 0;
+		let mut prev_line: String = "".to_string();
 
 		for line in lines.into_iter() {
 			let mut line_length = 0;
@@ -97,9 +98,9 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 			line_count += 1;
 
 			if let Ok(line) = line {
-				let chars = line.chars().peekable();
+				let chars = line.chars();
 
-				for c in chars {
+				for (i, c) in chars.enumerate() {
 					if let Ok(token) = Token::try_from(c) {
 						match token {
 							Token::BLANKSPACE => continue,
@@ -110,20 +111,34 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 							}
 						}
 					} else {
-						panic!("Invalid token {} on line {}", c, line_number);
+						return Err(anyhow::format_err!(
+							"{}\n{}^\n\ninvalid token `{}` on line {}",
+							line,
+							" ".repeat(i),
+							c,
+							line_number
+						));
 					}
 				}
+
+				if line_length != 0 && prev_line_length != 0 && line_length != prev_line_length {
+					return Err(anyhow::format_err!(
+						"{} (length of {})\n{} (length of {})\n\nlength of line {} ({}) does not match previous line ({})",
+						prev_line,
+						prev_line_length,
+						line,
+						line_length,
+						line_number,
+						line_length,
+						prev_line_length
+					));
+				}
+
+				prev_line = line;
 			}
 
 			if line_length == 0 {
 				line_count -= 1;
-			}
-
-			if line_length != 0 && prev_line_length != 0 && line_length != prev_line_length {
-				panic!(
-					"Length of line {} ({}) does not match previous line ({})",
-					line_number, line_length, prev_line_length
-				)
 			}
 
 			prev_line_length = line_length;

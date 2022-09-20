@@ -13,7 +13,7 @@ pub struct Args {
 	#[clap(short, long, takes_value = false)]
 	pub debug: bool,
 
-	/// Whether to... use ascii?
+	/// Whether to use ascii
 	#[clap(short, long, takes_value = false)]
 	pub ascii: bool,
 }
