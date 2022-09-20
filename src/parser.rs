@@ -114,8 +114,8 @@ pub fn interpret(grid: &mut Grid, ascii: bool, debug: bool) -> u32 {
 
 			println!(
 				"{}\n{}\n\n({}, {}) = {:?}",
-				&grid.data.iter().map(|x| x.to_string()).collect::<String>(),
-				&grid,
+				grid.data.iter().map(|x| x.to_string()).collect::<String>(),
+				grid,
 				x + 1,
 				y + 1,
 				point.token,
