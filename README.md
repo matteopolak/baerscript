@@ -5,6 +5,7 @@
 [![Rust:Nightly](https://img.shields.io/badge/rust-nightly-blue.svg)](https://www.rust-lang.org/tools/install)
 
 [BaerScript](https://github.com/matteopolak/baerscript) is an esoteric programming language built with Rust 🦀.
+Check out the docs [by clicking here](DOCUMENTATION.md).
 
 ## Install
 

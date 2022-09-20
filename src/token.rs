@@ -20,8 +20,8 @@ impl TryFrom<char> for Token {
 		match value {
 			'.' => Ok(Self::NULL),
 			'+' => Ok(Self::ADD),
-			'*' => Ok(Self::MULTIPLY),
 			'-' => Ok(Self::SUBTRACT),
+			'*' => Ok(Self::MULTIPLY),
 			'<' => Ok(Self::LEFT),
 			'>' => Ok(Self::RIGHT),
 			'^' => Ok(Self::UP),
@@ -43,8 +43,8 @@ impl std::fmt::Display for Token {
 			match self {
 				Token::NULL => " ",
 				Token::ADD => "+",
-				Token::MULTIPLY => "*",
 				Token::SUBTRACT => "-",
+				Token::MULTIPLY => "*",
 				Token::LEFT => "<",
 				Token::RIGHT => ">",
 				Token::UP => "^",

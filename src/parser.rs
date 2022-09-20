@@ -4,6 +4,10 @@ use std::io::{self, Write};
 use crate::grid::{Grid, GridTrait, Point};
 use crate::token::Token;
 
+lazy_static::lazy_static! {
+	static ref TERMINAL: console::Term = console::Term::stdout();
+}
+
 /// Gets a character (ascii=true) or an integer (ascii=false) from stdin
 fn input(ascii: bool) -> u32 {
 	loop {
@@ -11,8 +15,7 @@ fn input(ascii: bool) -> u32 {
 
 		io::stdout().flush().unwrap();
 
-		let term = console::Term::stdout();
-		let s = term.read_line().unwrap();
+		let s = TERMINAL.read_line().unwrap();
 
 		if ascii {
 			if let Ok(c) = s.parse::<char>() {
@@ -33,10 +36,12 @@ fn input(ascii: bool) -> u32 {
 /// Prints the value to stdout (as a char if ascii=true)
 fn output(value: u32, ascii: bool) {
 	if ascii {
-		println!("{}", char::from_u32(value).unwrap_or('?'));
+		print!("{}", char::from_u32(value).unwrap_or('?'));
 	} else {
-		println!("baer says {}", value);
+		print!("{}", value);
 	}
+
+	io::stdout().flush().unwrap();
 }
 
 /// Divides the number by 2
@@ -103,6 +108,22 @@ pub fn interpret(grid: &mut Grid, ascii: bool, debug: bool) -> u32 {
 	let mut next_value: u32 = *grid.get_value().unwrap();
 
 	while let Some(point) = grid.get(x, y) {
+		if debug {
+			TERMINAL.clear_screen().unwrap();
+			TERMINAL.move_cursor_to(0, 0).unwrap();
+
+			println!(
+				"{}\n{}\n\n({}, {}) = {:?}",
+				&grid.data.iter().map(|x| x.to_string()).collect::<String>(),
+				&grid,
+				x + 1,
+				y + 1,
+				point.token,
+			);
+
+			TERMINAL.read_key().ok();
+		}
+
 		step += 1;
 
 		((x, y), value) = get_point_instructions(x, y, point, next_value, ascii);
@@ -110,10 +131,6 @@ pub fn interpret(grid: &mut Grid, ascii: bool, debug: bool) -> u32 {
 		grid.set_value(value);
 		grid.x = x;
 		grid.y = y;
-
-		if debug {
-			todo!("create a nice debugger tui");
-		}
 
 		let value = grid.get_value();
 

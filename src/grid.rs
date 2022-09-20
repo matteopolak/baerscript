@@ -22,7 +22,7 @@ pub trait GridTrait {
 	fn set_rows(&mut self, rows: usize);
 	fn set_columns(&mut self, columns: usize);
 	fn push(&mut self, value: Point);
-	fn get(&mut self, x: usize, y: usize) -> Option<&Point>;
+	fn get(&self, x: usize, y: usize) -> Option<&Point>;
 	fn set_value(&mut self, value: u32);
 	fn get_value(&mut self) -> Option<&u32>;
 }
@@ -62,7 +62,7 @@ impl GridTrait for Grid {
 		self.tokens.push(token);
 	}
 
-	fn get(&mut self, x: usize, y: usize) -> Option<&Point> {
+	fn get(&self, x: usize, y: usize) -> Option<&Point> {
 		if y >= self.rows {
 			return None;
 		}
