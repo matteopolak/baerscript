@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 /// Baerscript
 #[derive(Parser, Debug)]
-#[clap(version = "0.2.1", author = "Matthew Polak")]
+#[clap(version = "0.1.0", author = "Matthew Polak")]
 pub struct Args {
 	/// The path to the baerscript file
 	#[clap(value_name = "FILE", index = 1)]
