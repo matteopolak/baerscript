@@ -17,10 +17,13 @@ fn main() -> anyhow::Result<()> {
 		return Ok(());
 	}
 
+	let start = std::time::SystemTime::now();
+
 	match grid::Grid::try_from(args.path) {
 		Ok(mut grid) => println!(
-			"\n\n[execution completed after {} steps]",
-			parser::interpret(&mut grid, args.ascii, args.debug)
+			"\n\n[execution completed after {} steps in {:.2}s]",
+			parser::interpret(&mut grid, args.ascii, args.debug),
+			start.elapsed().unwrap().as_secs_f64()
 		),
 		Err(e) => eprintln!("error while parsing script:\n{}", e),
 	}
