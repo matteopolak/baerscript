@@ -1,12 +1,7 @@
-#![feature(iter_intersperse)]
-
 use clap::Parser;
+use runtime::{grid, parser};
 
 mod cli;
-mod grid;
-mod parser;
-mod reader;
-mod token;
 
 fn main() -> anyhow::Result<()> {
 	let args = cli::Args::parse();

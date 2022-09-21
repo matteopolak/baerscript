@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::str::Lines;
 
 use crate::reader;
 use crate::token::Token;
@@ -75,6 +76,84 @@ impl GridExt for Grid {
 				.get((x + y * self.columns) as usize)
 				.unwrap_or(&Point { token: Token::NULL }),
 		)
+	}
+}
+
+/// String -> Grid conversion
+impl std::convert::TryFrom<Lines<'_>> for Grid {
+	type Error = anyhow::Error;
+
+	fn try_from(lines: Lines) -> anyhow::Result<Grid, Self::Error> {
+		let mut grid = Grid::new();
+		let mut line_number: usize = 0;
+		let mut line_count: usize = 0;
+		let mut prev_line_length: usize = 0;
+		let mut prev_line = "";
+
+		for line in lines.into_iter() {
+			let mut line_length = 0;
+			let mut has_down = false;
+
+			line_number += 1;
+			line_count += 1;
+
+			let chars = line.chars();
+
+			for (i, c) in chars.enumerate() {
+				if let Ok(token) = Token::try_from(c) {
+					match token {
+						Token::BLANKSPACE => continue,
+						Token::COMMENT => break,
+						token @ _ => {
+							if token == Token::DOWN {
+								has_down = true;
+							}
+
+							grid.push(Point { token });
+							line_length += 1;
+						}
+					}
+				} else {
+					return Err(anyhow::format_err!(
+						"{}\n{}^\n\ninvalid token `{}` on line {}",
+						line,
+						" ".repeat(i),
+						c,
+						line_number
+					));
+				}
+			}
+
+			if line_length != 0 && prev_line_length != 0 && line_length != prev_line_length {
+				return Err(anyhow::format_err!(
+						"{} (length of {})\n{} (length of {})\n\nlength of line {} ({}) does not match previous line ({})",
+						prev_line,
+						prev_line_length,
+						line,
+						line_length,
+						line_number,
+						line_length,
+						prev_line_length
+					));
+			}
+
+			prev_line = line;
+
+			if line_length == 0 {
+				line_count -= 1;
+			}
+
+			prev_line_length = line_length;
+
+			if !has_down {
+				break;
+			}
+		}
+
+		grid.set_columns(prev_line_length);
+		grid.set_rows(line_count);
+
+		Ok(grid)
 	}
 }
 
