@@ -54,8 +54,9 @@ fn multiply(x: usize) -> usize {
 	(x + 1) * 3
 }
 
-/// Performs the collatz conjecture (3x+1)
-fn collatz_conjecture(x: usize) -> usize {
+/// Performs the collatz sequence (3x+1 if even, x / 2 if odd)
+/// Note: the sequence is backwards as x is actually x - 1
+fn collatz_sequence(x: usize) -> usize {
 	if x % 2 == 1 {
 		divide(x)
 	} else {
@@ -77,13 +78,13 @@ pub fn get_point_instructions(
 				if value == 0 {
 					multiply(x)
 				} else {
-					collatz_conjecture(x)
+					collatz_sequence(x)
 				},
 				y,
 			),
-			Token::DOWN => (collatz_conjecture(x), y + 1),
-			Token::UP => (collatz_conjecture(x), y - 1),
-			_ => (collatz_conjecture(x), y),
+			Token::DOWN => (collatz_sequence(x), y + 1),
+			Token::UP => (collatz_sequence(x), y - 1),
+			_ => (collatz_sequence(x), y),
 		},
 		match point.token {
 			Token::ADD => value + 1,
@@ -161,8 +162,8 @@ mod tests {
 
 	#[test]
 	fn test_collatz() {
-		assert_eq!(collatz_conjecture(2), 9);
-		assert_eq!(collatz_conjecture(3), 1);
+		assert_eq!(collatz_sequence(2), 9);
+		assert_eq!(collatz_sequence(3), 1);
 	}
 
 	#[test]
