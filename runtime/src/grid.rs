@@ -4,10 +4,12 @@ use std::str::Lines;
 use crate::reader;
 use crate::token::Token;
 
+#[derive(Debug)]
 pub struct Point {
 	pub token: Token,
 }
 
+#[derive(Debug)]
 pub struct Grid {
 	pub data: Vec<u32>,
 	pub x: usize,
@@ -222,13 +224,11 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 
 			if line_length == 0 {
 				line_count -= 1;
+			} else if !has_down {
+				break;
 			}
 
 			prev_line_length = line_length;
-
-			if !has_down {
-				break;
-			}
 		}
 
 		grid.set_columns(prev_line_length);

@@ -1,6 +1,6 @@
 use console;
 use lazy_static::lazy_static;
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 
 use crate::grid::{Grid, GridExt, Point};
 use crate::token::Token;
@@ -10,13 +10,30 @@ lazy_static! {
 }
 
 /// Gets a character (ascii=true) or an integer (ascii=false) from stdin
-fn input(ascii: bool) -> u32 {
+fn input<I>(stdin: &mut I, ascii: bool) -> u32
+where
+	I: Read,
+{
 	loop {
 		print!("{} > ", if ascii { "character" } else { "integer" });
 
+		// Flush stdout to print the line above, as it will only
+		// flush the buffer when it comes across a LF character
 		io::stdout().flush().unwrap();
 
-		let s = TERMINAL.read_line().unwrap();
+		let s = {
+			loop {
+				let mut buf = vec![0; 1];
+				stdin.read_exact(&mut buf).unwrap();
+
+				// Ignore CR and LF keys
+				if buf[0] == 13 || buf[0] == 10 {
+					continue;
+				}
+
+				break String::from_utf8(buf).unwrap();
+			}
+		};
 
 		if ascii {
 			if let Ok(c) = s.parse::<char>() {
@@ -35,11 +52,16 @@ fn input(ascii: bool) -> u32 {
 }
 
 /// Prints the value to stdout (as a char if ascii=true)
-fn output(value: u32, ascii: bool) {
+fn output<O>(value: u32, stdout: &mut O, ascii: bool)
+where
+	O: Write,
+{
 	if ascii {
-		print!("{}", char::from_u32(value).unwrap_or('?'));
+		stdout
+			.write(&format!("{}", char::from_u32(value).unwrap_or('?')).into_bytes())
+			.unwrap();
 	} else {
-		print!("{}", value);
+		stdout.write(&format!("{}", value).into_bytes()).unwrap();
 	}
 
 	io::stdout().flush().unwrap();
@@ -66,13 +88,19 @@ fn collatz_sequence(x: usize) -> usize {
 }
 
 /// Caluclates the ((x, y), column_value) for a given point
-pub fn get_point_instructions(
+pub fn get_point_instructions<I, O>(
 	x: usize,
 	y: usize,
 	point: &Point,
 	value: u32,
 	ascii: bool,
-) -> ((usize, usize), u32) {
+	stdin: &mut I,
+	stdout: &mut O,
+) -> ((usize, usize), u32)
+where
+	I: Read,
+	O: Write,
+{
 	(
 		match point.token {
 			Token::MULTIPLY => (
@@ -90,9 +118,9 @@ pub fn get_point_instructions(
 		match point.token {
 			Token::ADD => value + 1,
 			Token::SUBTRACT => value - 1,
-			Token::LEFT => input(ascii),
+			Token::LEFT => input(stdin, ascii),
 			Token::RIGHT => {
-				output(value, ascii);
+				output(value, stdout, ascii);
 
 				value
 			}
@@ -102,7 +130,17 @@ pub fn get_point_instructions(
 }
 
 /// Interprets a grid, starting from (0, 0)
-pub fn interpret(grid: &mut Grid, ascii: bool, debug: bool) -> u32 {
+pub fn interpret<I, O>(
+	grid: &mut Grid,
+	ascii: bool,
+	debug: bool,
+	stdin: &mut I,
+	stdout: &mut O,
+) -> u32
+where
+	I: Read,
+	O: Write,
+{
 	let mut x = 0;
 	let mut y = 0;
 	let mut step: u32 = 0;
@@ -128,7 +166,7 @@ pub fn interpret(grid: &mut Grid, ascii: bool, debug: bool) -> u32 {
 
 		step += 1;
 
-		((x, y), value) = get_point_instructions(x, y, point, next_value, ascii);
+		((x, y), value) = get_point_instructions(x, y, point, next_value, ascii, stdin, stdout);
 
 		grid.set_value(value);
 		grid.x = x;
@@ -150,26 +188,27 @@ mod tests {
 
 	#[test]
 	fn test_multiply() {
-		assert_eq!(multiply(0), 3);
-		assert_eq!(multiply(1), 6);
-		assert_eq!(multiply(2), 9);
+		assert_eq!(3, multiply(0));
+		assert_eq!(6, multiply(1));
+		assert_eq!(9, multiply(2));
 	}
 
 	#[test]
 	fn test_divide() {
-		assert_eq!(divide(5), 2);
-		assert_eq!(divide(8), 3);
+		assert_eq!(2, divide(5));
+		assert_eq!(3, divide(8));
 	}
 
 	#[test]
 	fn test_collatz() {
-		assert_eq!(collatz_sequence(2), 9);
-		assert_eq!(collatz_sequence(3), 1);
+		assert_eq!(9, collatz_sequence(2));
+		assert_eq!(1, collatz_sequence(3));
 	}
 
 	#[test]
 	fn test_get_point_instructions() {
 		assert_eq!(
+			((1, 6), 3),
 			get_point_instructions(
 				3,
 				6,
@@ -177,27 +216,53 @@ mod tests {
 					token: Token::MULTIPLY
 				},
 				3,
-				false
-			),
-			((1, 6), 3)
+				false,
+				&mut std::io::empty(),
+				&mut std::io::sink(),
+			)
 		);
 
 		assert_eq!(
-			get_point_instructions(5, 9, &Point { token: Token::DOWN }, 6, false),
-			((2, 10), 6)
+			((2, 10), 6),
+			get_point_instructions(
+				5,
+				9,
+				&Point { token: Token::DOWN },
+				6,
+				false,
+				&mut std::io::empty(),
+				&mut std::io::sink(),
+			)
 		);
 
 		assert_eq!(
-			get_point_instructions(5, 9, &Point { token: Token::UP }, 6, false),
-			((2, 8), 6)
+			((2, 8), 6),
+			get_point_instructions(
+				5,
+				9,
+				&Point { token: Token::UP },
+				6,
+				false,
+				&mut std::io::empty(),
+				&mut std::io::sink(),
+			)
 		);
 
 		assert_eq!(
-			get_point_instructions(5, 9, &Point { token: Token::ADD }, 6, false),
-			((2, 9), 7)
+			((2, 9), 7),
+			get_point_instructions(
+				5,
+				9,
+				&Point { token: Token::ADD },
+				6,
+				false,
+				&mut std::io::empty(),
+				&mut std::io::sink(),
+			)
 		);
 
 		assert_eq!(
+			((2, 9), 5),
 			get_point_instructions(
 				5,
 				9,
@@ -205,14 +270,23 @@ mod tests {
 					token: Token::SUBTRACT
 				},
 				6,
-				false
-			),
-			((2, 9), 5)
+				false,
+				&mut std::io::empty(),
+				&mut std::io::sink(),
+			)
 		);
 
 		assert_eq!(
-			get_point_instructions(0, 0, &Point { token: Token::NULL }, 5, false),
-			((3, 0), 5)
+			((3, 0), 5),
+			get_point_instructions(
+				0,
+				0,
+				&Point { token: Token::NULL },
+				5,
+				false,
+				&mut std::io::empty(),
+				&mut std::io::sink(),
+			)
 		);
 	}
 }
