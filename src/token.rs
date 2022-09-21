@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub enum Token {
 	NULL,
 	ADD,      // +

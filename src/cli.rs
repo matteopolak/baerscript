@@ -2,7 +2,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 /// Baerscript
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[clap(version = "0.1.0", author = "Matthew Polak")]
 pub struct Args {
 	/// The path to the baerscript file

@@ -1,10 +1,11 @@
 use console;
+use lazy_static::lazy_static;
 use std::io::{self, Write};
 
-use crate::grid::{Grid, GridTrait, Point};
+use crate::grid::{Grid, GridExt, Point};
 use crate::token::Token;
 
-lazy_static::lazy_static! {
+lazy_static! {
 	static ref TERMINAL: console::Term = console::Term::stdout();
 }
 
@@ -114,7 +115,7 @@ pub fn interpret(grid: &mut Grid, ascii: bool, debug: bool) -> u32 {
 			TERMINAL.move_cursor_to(0, 0).unwrap();
 
 			println!(
-				"{}\n{}\n\n({}, {}) = {:?}",
+				"{}\n{}\n\n({}, {}) = {}",
 				grid.data.iter().map(|x| x.to_string()).collect::<String>(),
 				grid,
 				x + 1,

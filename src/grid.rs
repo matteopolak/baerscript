@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use crate::reader;
 use crate::token::Token;
 
-#[derive(Debug)]
 pub struct Point {
 	pub token: Token,
 }
@@ -17,7 +16,7 @@ pub struct Grid {
 	tokens: Vec<Point>,
 }
 
-pub trait GridTrait {
+pub trait GridExt {
 	fn new() -> Self;
 	fn set_rows(&mut self, rows: usize);
 	fn set_columns(&mut self, columns: usize);
@@ -27,7 +26,7 @@ pub trait GridTrait {
 	fn get_value(&mut self) -> Option<&u32>;
 }
 
-impl GridTrait for Grid {
+impl GridExt for Grid {
 	fn new() -> Self {
 		Self {
 			tokens: Vec::new(),
@@ -93,6 +92,7 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 
 		for line in lines.into_iter() {
 			let mut line_length = 0;
+			let mut has_down = false;
 
 			line_number += 1;
 			line_count += 1;
@@ -106,6 +106,10 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 							Token::BLANKSPACE => continue,
 							Token::COMMENT => break,
 							token @ _ => {
+								if token == Token::DOWN {
+									has_down = true;
+								}
+
 								grid.push(Point { token });
 								line_length += 1;
 							}
@@ -142,6 +146,10 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 			}
 
 			prev_line_length = line_length;
+
+			if !has_down {
+				break;
+			}
 		}
 
 		grid.set_columns(prev_line_length);
