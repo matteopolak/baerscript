@@ -1,15 +1,17 @@
 #[derive(Debug, PartialEq)]
 pub enum Token {
-	NULL,
-	ADD,      // +
-	MULTIPLY, // *
-	SUBTRACT, // -
-	LEFT,     // <
-	RIGHT,    // >
-	UP,       // ^
-	DOWN,     // v
-	COMMENT,  // #
-	BLANKSPACE,
+	Null,
+	Add,      // +
+	Multiply, // *
+	Subtract, // -
+	Left,     // <
+	Right,    // >
+	Up,       // ^
+	Down,     // v
+	Comment,  // #
+	BlankSpace,
+	OpenSquareBracket,   // [
+	ClosedSquareBracket, // ]
 }
 
 /// Create conversion from char -> Token
@@ -18,16 +20,18 @@ impl TryFrom<char> for Token {
 
 	fn try_from(value: char) -> Result<Self, Self::Error> {
 		match value {
-			'.' => Ok(Self::NULL),
-			'+' => Ok(Self::ADD),
-			'-' => Ok(Self::SUBTRACT),
-			'*' => Ok(Self::MULTIPLY),
-			'<' => Ok(Self::LEFT),
-			'>' => Ok(Self::RIGHT),
-			'^' => Ok(Self::UP),
-			'v' => Ok(Self::DOWN),
-			'#' => Ok(Self::COMMENT),
-			'\u{0032}' | '\u{0009}' => Ok(Self::BLANKSPACE),
+			'.' => Ok(Self::Null),
+			'+' => Ok(Self::Add),
+			'-' => Ok(Self::Subtract),
+			'*' => Ok(Self::Multiply),
+			'<' => Ok(Self::Left),
+			'>' => Ok(Self::Right),
+			'^' => Ok(Self::Up),
+			'v' => Ok(Self::Down),
+			'#' => Ok(Self::Comment),
+			'\u{0032}' | '\u{0009}' => Ok(Self::BlankSpace),
+			'[' => Ok(Self::OpenSquareBracket),
+			']' => Ok(Self::ClosedSquareBracket),
 			c @ _ => Err(format!("Unknown character {c}")),
 		}
 	}
@@ -41,16 +45,18 @@ impl std::fmt::Display for Token {
 			f,
 			"{}",
 			match self {
-				Token::NULL => " ",
-				Token::ADD => "+",
-				Token::SUBTRACT => "-",
-				Token::MULTIPLY => "*",
-				Token::LEFT => "<",
-				Token::RIGHT => ">",
-				Token::UP => "^",
-				Token::DOWN => "v",
-				Token::COMMENT => "#",
-				Token::BLANKSPACE => " ",
+				Token::Null => " ",
+				Token::Add => "+",
+				Token::Subtract => "-",
+				Token::Multiply => "*",
+				Token::Left => "<",
+				Token::Right => ">",
+				Token::Up => "^",
+				Token::Down => "v",
+				Token::Comment => "#",
+				Token::BlankSpace => " ",
+				Token::OpenSquareBracket => "[",
+				Token::ClosedSquareBracket => "]",
 			}
 		)
 	}

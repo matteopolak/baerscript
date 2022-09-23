@@ -1,16 +1,18 @@
 ## Keywords
 
-| Symbol | Description                                                                  |
-| ------ | ---------------------------------------------------------------------------- |
-| `.`    | Moves Baer to the next sequence in the collatz conjecture for the current x. |
-| `+`    | Increments the current column and performs `.`                               |
-| `-`    | Decrements the current column and performs `.`                               |
-| `*`    | Moves 3x + 1 if the column's value is 0, otherwise performs `.`              |
-| `<`    | Reads standard input and overwrites the column value with it                 |
-| `>`    | Prints column value to standard output                                       |
-| `^`    | Moves up one row and performs `.`                                            |
-| `v`    | Down down one row and performs `.`                                           |
-| `#`    | Comment; Ignores the rest of the line                                        |
+| Symbol | Description                                                                                                                    |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `.`    | Moves Baer to the next sequence in the collatz conjecture for the current x.                                                   |
+| `+`    | Increments the current column and performs `.`                                                                                 |
+| `-`    | Decrements the current column and performs `.`                                                                                 |
+| `*`    | Moves 3x + 1 if the column's value is 0, otherwise performs `.`                                                                |
+| `<`    | Reads standard input and overwrites the column value with it                                                                   |
+| `>`    | Prints column value to standard output                                                                                         |
+| `^`    | Moves up one row and performs `.`                                                                                              |
+| `v`    | Down down one row and performs `.`                                                                                             |
+| `[`    | Increments x by 1, ignoring the movements from each token until it reaches the end of the line or a closing bracket is reached |
+| `]`    | Closes the loop created by `[`                                                                                                 |
+| `#`    | Comment; Ignores the rest of the line                                                                                          |
 
 ### Example 1: 1char.bs
 

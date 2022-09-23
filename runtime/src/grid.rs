@@ -14,8 +14,8 @@ pub struct Grid {
 	pub data: Vec<u32>,
 	pub x: usize,
 	pub y: usize,
-	rows: usize,
-	columns: usize,
+	pub rows: usize,
+	pub columns: usize,
 	tokens: Vec<Point>,
 }
 
@@ -70,13 +70,13 @@ impl GridExt for Grid {
 		}
 
 		if x >= self.columns {
-			return Some(&Point { token: Token::NULL });
+			return Some(&Point { token: Token::Null });
 		}
 
 		Some(
 			self.tokens
 				.get((x + y * self.columns) as usize)
-				.unwrap_or(&Point { token: Token::NULL }),
+				.unwrap_or(&Point { token: Token::Null }),
 		)
 	}
 }
@@ -104,10 +104,10 @@ impl std::convert::TryFrom<Lines<'_>> for Grid {
 			for (i, c) in chars.enumerate() {
 				if let Ok(token) = Token::try_from(c) {
 					match token {
-						Token::BLANKSPACE => continue,
-						Token::COMMENT => break,
+						Token::BlankSpace => continue,
+						Token::Comment => break,
 						token @ _ => {
-							if token == Token::DOWN {
+							if token == Token::Down {
 								has_down = true;
 							}
 
@@ -184,10 +184,10 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 				for (i, c) in chars.enumerate() {
 					if let Ok(token) = Token::try_from(c) {
 						match token {
-							Token::BLANKSPACE => continue,
-							Token::COMMENT => break,
+							Token::BlankSpace => continue,
+							Token::Comment => break,
 							token @ _ => {
-								if token == Token::DOWN {
+								if token == Token::Down {
 									has_down = true;
 								}
 

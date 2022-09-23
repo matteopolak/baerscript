@@ -103,7 +103,7 @@ where
 {
 	(
 		match point.token {
-			Token::MULTIPLY => (
+			Token::Multiply => (
 				if value == 0 {
 					multiply(x)
 				} else {
@@ -111,15 +111,15 @@ where
 				},
 				y,
 			),
-			Token::DOWN => (collatz_sequence(x), y + 1),
-			Token::UP => (collatz_sequence(x), y - 1),
+			Token::Down => (collatz_sequence(x), y + 1),
+			Token::Up => (collatz_sequence(x), y - 1),
 			_ => (collatz_sequence(x), y),
 		},
 		match point.token {
-			Token::ADD => value + 1,
-			Token::SUBTRACT => value - 1,
-			Token::LEFT => input(stdin, ascii),
-			Token::RIGHT => {
+			Token::Add => value + 1,
+			Token::Subtract => value - 1,
+			Token::Left => input(stdin, ascii),
+			Token::Right => {
 				output(value, stdout, ascii);
 
 				value
@@ -146,6 +146,7 @@ where
 	let mut step: u32 = 0;
 	let mut value: u32;
 	let mut next_value: u32 = *grid.get_value().unwrap();
+	let mut looping = false;
 
 	while let Some(point) = grid.get(x, y) {
 		if debug {
@@ -166,11 +167,22 @@ where
 
 		step += 1;
 
+		match point.token {
+			Token::OpenSquareBracket => looping = true,
+			Token::ClosedSquareBracket => looping = false,
+			_ => (),
+		}
+
 		((x, y), value) = get_point_instructions(x, y, point, next_value, ascii, stdin, stdout);
 
 		grid.set_value(value);
-		grid.x = x;
-		grid.y = y;
+
+		if looping && grid.x < grid.columns - 1 {
+			grid.x += 1;
+		} else {
+			grid.x = x;
+			grid.y = y;
+		}
 
 		let value = grid.get_value();
 
@@ -213,7 +225,7 @@ mod tests {
 				3,
 				6,
 				&Point {
-					token: Token::MULTIPLY
+					token: Token::Multiply
 				},
 				3,
 				false,
@@ -227,7 +239,7 @@ mod tests {
 			get_point_instructions(
 				5,
 				9,
-				&Point { token: Token::DOWN },
+				&Point { token: Token::Down },
 				6,
 				false,
 				&mut std::io::empty(),
@@ -240,7 +252,7 @@ mod tests {
 			get_point_instructions(
 				5,
 				9,
-				&Point { token: Token::UP },
+				&Point { token: Token::Up },
 				6,
 				false,
 				&mut std::io::empty(),
@@ -253,7 +265,7 @@ mod tests {
 			get_point_instructions(
 				5,
 				9,
-				&Point { token: Token::ADD },
+				&Point { token: Token::Add },
 				6,
 				false,
 				&mut std::io::empty(),
@@ -267,7 +279,7 @@ mod tests {
 				5,
 				9,
 				&Point {
-					token: Token::SUBTRACT
+					token: Token::Subtract
 				},
 				6,
 				false,
@@ -281,7 +293,7 @@ mod tests {
 			get_point_instructions(
 				0,
 				0,
-				&Point { token: Token::NULL },
+				&Point { token: Token::Null },
 				5,
 				false,
 				&mut std::io::empty(),
