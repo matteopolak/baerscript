@@ -167,6 +167,8 @@ where
 
 		step += 1;
 
+		// Handle loop characters (a bit hacky if it needs to be generalized to >1 function)
+		// TODO: Refactor into a context manager
 		match point.token {
 			Token::OpenSquareBracket => looping = true,
 			Token::ClosedSquareBracket => looping = false,

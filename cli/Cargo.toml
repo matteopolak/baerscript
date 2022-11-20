@@ -3,7 +3,9 @@ name = "cli"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "baerscript"
+path = "src/main.rs"
 
 [profile.release]
 strip = "debuginfo"
@@ -16,7 +18,3 @@ debug = 2
 anyhow = "1.0.65"
 clap = { version = "3.2.22", features=["derive"] }
 runtime = { path = "../runtime" }
-
-[[bin]]
-name = "baerscript"
-path = "src/main.rs"
