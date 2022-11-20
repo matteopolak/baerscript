@@ -8,8 +8,6 @@
 [BaerScript](https://github.com/matteopolak/baerscript) is an esoteric programming language built with Rust 🦀.
 Check out the docs [by clicking here](DOCUMENTATION.md).
 
-Inspired by [Forgscript](https://github.com/expitau-dev/Forgscript) 🐸.
-
 ## Install
 
 See the [Rust install guide](https://www.rust-lang.org/tools/install) for [Rust nightly](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html),
