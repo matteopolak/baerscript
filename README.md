@@ -8,6 +8,18 @@
 [BaerScript](https://github.com/matteopolak/baerscript) is an esoteric programming language built with Rust 🦀.
 Check out the docs [by clicking here](DOCUMENTATION.md).
 
+```bash
+Usage: baerscript [OPTIONS] <FILE>
+Arguments:
+  <FILE>  The path to the baerscript file
+
+Options:
+  -d, --debug    Whether to show debugging information
+  -a, --ascii    Whether to use ascii
+  -h, --help     Print help information
+  -V, --version  Print version information
+```
+
 ## Install
 
 See the [Rust install guide](https://www.rust-lang.org/tools/install) for [Rust nightly](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html),
