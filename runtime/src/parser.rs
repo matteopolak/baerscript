@@ -1,5 +1,6 @@
 use console;
 use lazy_static::lazy_static;
+use std::fmt;
 use std::io::{self, Read, Write};
 
 use crate::grid::{Grid, GridExt, Point};
@@ -9,81 +10,103 @@ lazy_static! {
 	static ref TERMINAL: console::Term = console::Term::stdout();
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub struct InterpretError {
+	pub message: String,
+	pub steps: u32,
+}
+
+impl fmt::Display for InterpretError {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{}", self.message)
+	}
+}
+
+impl std::error::Error for InterpretError {}
+
 /// Gets a character (ascii=true) or an integer (ascii=false) from stdin
-fn input<I>(stdin: &mut I, ascii: bool) -> u32
+fn input<I>(stdin: &mut I, ascii: bool, prompt: bool) -> Result<u32, String>
 where
 	I: Read,
 {
 	loop {
-		print!("{} > ", if ascii { "character" } else { "integer" });
+		if prompt {
+			print!("{} > ", if ascii { "character" } else { "integer" });
 
-		// Flush stdout to print the line above, as it will only
-		// flush the buffer when it comes across a LF character
-		io::stdout().flush().unwrap();
+			// Flush stdout to print the line above, as it will only
+			// flush the buffer when it comes across a LF character
+			io::stdout().flush().map_err(|error| error.to_string())?;
+		}
 
-		let s = {
-			loop {
-				let mut buf = vec![0; 1];
-				stdin.read_exact(&mut buf).unwrap();
+		let mut byte = [0; 1];
+		stdin.read_exact(&mut byte).map_err(|_| {
+			"stdin ended before an input instruction could read a value".to_string()
+		})?;
 
-				// Ignore CR and LF keys
-				if buf[0] == 13 || buf[0] == 10 {
-					continue;
-				}
+		// Ignore CR and LF keys.
+		if byte[0] == b'\r' || byte[0] == b'\n' {
+			continue;
+		}
 
-				break String::from_utf8(buf).unwrap();
-			}
+		let parsed = if ascii {
+			byte[0].is_ascii().then_some(byte[0] as u32)
+		} else {
+			(byte[0] as char).to_digit(10)
 		};
 
-		if ascii {
-			if let Ok(c) = s.parse::<char>() {
-				break c as u32;
-			} else {
-				println!("character not provided, received {}", s);
-			}
-		} else {
-			if let Ok(u) = s.parse::<u32>() {
-				break u;
-			} else {
-				println!("integer not provided, received {}", s);
-			}
+		if let Some(value) = parsed {
+			return Ok(value);
 		}
+
+		let message = if ascii {
+			"ASCII character not provided".to_string()
+		} else {
+			format!("integer not provided, received {}", byte[0] as char)
+		};
+		if !prompt {
+			return Err(message);
+		}
+
+		println!("{message}");
 	}
 }
 
 /// Prints the value to stdout (as a char if ascii=true)
-fn output<O>(value: u32, stdout: &mut O, ascii: bool)
+fn output<O>(value: u32, stdout: &mut O, ascii: bool) -> Result<(), String>
 where
 	O: Write,
 {
 	if ascii {
 		stdout
-			.write(&format!("{}", char::from_u32(value).unwrap_or('?')).into_bytes())
-			.unwrap();
+			.write_all(&format!("{}", char::from_u32(value).unwrap_or('?')).into_bytes())
+			.map_err(|error| error.to_string())?;
 	} else {
-		stdout.write(&format!("{}", value).into_bytes()).unwrap();
+		stdout
+			.write_all(&format!("{}", value).into_bytes())
+			.map_err(|error| error.to_string())?;
 	}
 
-	io::stdout().flush().unwrap();
+	Ok(())
 }
 
-/// Divides the number by 2
-fn divide(x: usize) -> usize {
-	(x + 1) / 2 - 1
+fn checked_divide(x: usize) -> Result<usize, String> {
+	x.checked_add(1)
+		.and_then(|value| value.checked_div(2))
+		.and_then(|value| value.checked_sub(1))
+		.ok_or_else(|| "instruction moved before the start of the grid".to_string())
 }
 
-/// Multiplies the number by 3
-fn multiply(x: usize) -> usize {
-	(x + 1) * 3
+fn checked_multiply(x: usize) -> Result<usize, String> {
+	x.checked_add(1)
+		.and_then(|value| value.checked_mul(3))
+		.ok_or_else(|| "instruction position overflowed".to_string())
 }
 
-/// Performs the collatz sequence (3x+1 if even, x / 2 if odd)
-/// Note: the sequence is backwards as x is actually x - 1
-fn collatz_sequence(x: usize) -> usize {
+fn checked_collatz_sequence(x: usize) -> Result<usize, String> {
 	if x % 2 == 1 {
-		divide(x)
+		checked_divide(x)
 	} else {
-		multiply(x)
+		checked_multiply(x)
 	}
 }
 
@@ -101,32 +124,63 @@ where
 	I: Read,
 	O: Write,
 {
-	(
+	get_point_instructions_checked((x, y), point, value, ascii, true, stdin, stdout)
+		.expect("BaerScript instruction failed")
+}
+
+fn get_point_instructions_checked<I, O>(
+	position: (usize, usize),
+	point: &Point,
+	value: u32,
+	ascii: bool,
+	prompt: bool,
+	stdin: &mut I,
+	stdout: &mut O,
+) -> Result<((usize, usize), u32), String>
+where
+	I: Read,
+	O: Write,
+{
+	let (x, y) = position;
+
+	Ok((
 		match point.token {
 			Token::Multiply => (
 				if value == 0 {
-					multiply(x)
+					checked_multiply(x)?
 				} else {
-					collatz_sequence(x)
+					checked_collatz_sequence(x)?
 				},
 				y,
 			),
-			Token::Down => (collatz_sequence(x), y + 1),
-			Token::Up => (collatz_sequence(x), y - 1),
-			_ => (collatz_sequence(x), y),
+			Token::Down => (
+				checked_collatz_sequence(x)?,
+				y.checked_add(1)
+					.ok_or_else(|| "instruction position overflowed".to_string())?,
+			),
+			Token::Up => (
+				checked_collatz_sequence(x)?,
+				y.checked_sub(1)
+					.ok_or_else(|| "instruction moved above the grid".to_string())?,
+			),
+			_ => (checked_collatz_sequence(x)?, y),
 		},
 		match point.token {
-			Token::Add => value + 1,
-			Token::Subtract => value - 1,
-			Token::Left => input(stdin, ascii),
+			Token::Add => value
+				.checked_add(1)
+				.ok_or_else(|| "column value overflowed".to_string())?,
+			Token::Subtract => value
+				.checked_sub(1)
+				.ok_or_else(|| "column value underflowed".to_string())?,
+			Token::Left => input(stdin, ascii, prompt)?,
 			Token::Right => {
-				output(value, stdout, ascii);
+				output(value, stdout, ascii)?;
 
 				value
 			}
 			_ => value,
 		},
-	)
+	))
 }
 
 /// Interprets a grid, starting from (0, 0)
@@ -141,14 +195,55 @@ where
 	I: Read,
 	O: Write,
 {
+	interpret_inner(grid, ascii, debug, true, None, stdin, stdout)
+		.expect("BaerScript execution failed")
+}
+
+/// Interprets a grid without terminal prompts and stops before exceeding `max_steps`.
+pub fn interpret_limited<I, O>(
+	grid: &mut Grid,
+	ascii: bool,
+	stdin: &mut I,
+	stdout: &mut O,
+	max_steps: u32,
+) -> Result<u32, InterpretError>
+where
+	I: Read,
+	O: Write,
+{
+	interpret_inner(grid, ascii, false, false, Some(max_steps), stdin, stdout)
+}
+
+fn interpret_inner<I, O>(
+	grid: &mut Grid,
+	ascii: bool,
+	debug: bool,
+	prompt: bool,
+	max_steps: Option<u32>,
+	stdin: &mut I,
+	stdout: &mut O,
+) -> Result<u32, InterpretError>
+where
+	I: Read,
+	O: Write,
+{
 	let mut x = 0;
 	let mut y = 0;
 	let mut step: u32 = 0;
 	let mut value: u32;
-	let mut next_value: u32 = *grid.get_value().unwrap();
+	let mut next_value: u32 = grid.get_value().copied().unwrap_or(0);
 	let mut looping = false;
 
 	while let Some(point) = grid.get(x, y) {
+		if let Some(limit) = max_steps {
+			if step >= limit {
+				return Err(InterpretError {
+					message: format!("execution exceeded the {limit} step limit"),
+					steps: step,
+				});
+			}
+		}
+
 		if debug {
 			TERMINAL.clear_screen().unwrap();
 			TERMINAL.move_cursor_to(0, 0).unwrap();
@@ -165,8 +260,6 @@ where
 			TERMINAL.read_key().ok();
 		}
 
-		step += 1;
-
 		// Handle loop characters (a bit hacky if it needs to be generalized to >1 function)
 		// TODO: Refactor into a context manager
 		match point.token {
@@ -175,7 +268,13 @@ where
 			_ => (),
 		}
 
-		((x, y), value) = get_point_instructions(x, y, point, next_value, ascii, stdin, stdout);
+		((x, y), value) =
+			get_point_instructions_checked((x, y), point, next_value, ascii, prompt, stdin, stdout)
+				.map_err(|message| InterpretError {
+					message,
+					steps: step,
+				})?;
+		step += 1;
 
 		grid.set_value(value);
 
@@ -186,14 +285,12 @@ where
 			grid.y = y;
 		}
 
-		let value = grid.get_value();
-
-		if value.is_some() {
-			next_value = *value.unwrap();
+		if let Some(value) = grid.get_value() {
+			next_value = *value;
 		}
 	}
 
-	step
+	Ok(step)
 }
 
 #[cfg(test)]
@@ -202,21 +299,21 @@ mod tests {
 
 	#[test]
 	fn test_multiply() {
-		assert_eq!(3, multiply(0));
-		assert_eq!(6, multiply(1));
-		assert_eq!(9, multiply(2));
+		assert_eq!(Ok(3), checked_multiply(0));
+		assert_eq!(Ok(6), checked_multiply(1));
+		assert_eq!(Ok(9), checked_multiply(2));
 	}
 
 	#[test]
 	fn test_divide() {
-		assert_eq!(2, divide(5));
-		assert_eq!(3, divide(8));
+		assert_eq!(Ok(2), checked_divide(5));
+		assert_eq!(Ok(3), checked_divide(8));
 	}
 
 	#[test]
 	fn test_collatz() {
-		assert_eq!(9, collatz_sequence(2));
-		assert_eq!(1, collatz_sequence(3));
+		assert_eq!(Ok(9), checked_collatz_sequence(2));
+		assert_eq!(Ok(1), checked_collatz_sequence(3));
 	}
 
 	#[test]

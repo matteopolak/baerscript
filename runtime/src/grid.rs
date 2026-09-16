@@ -75,7 +75,7 @@ impl GridExt for Grid {
 
 		Some(
 			self.tokens
-				.get((x + y * self.columns) as usize)
+				.get(x + y * self.columns)
 				.unwrap_or(&Point { token: Token::Null }),
 		)
 	}
@@ -106,7 +106,7 @@ impl std::convert::TryFrom<Lines<'_>> for Grid {
 					match token {
 						Token::BlankSpace => continue,
 						Token::Comment => break,
-						token @ _ => {
+						token => {
 							if token == Token::Down {
 								has_down = true;
 							}
@@ -186,7 +186,7 @@ impl std::convert::TryFrom<PathBuf> for Grid {
 						match token {
 							Token::BlankSpace => continue,
 							Token::Comment => break,
-							token @ _ => {
+							token => {
 								if token == Token::Down {
 									has_down = true;
 								}
@@ -245,10 +245,10 @@ impl std::fmt::Display for Grid {
 			f,
 			"{}",
 			self.tokens
-				.chunks(self.columns as usize)
+				.chunks(self.columns)
 				.enumerate()
 				.map(|(y, p)| p
-					.into_iter()
+					.iter()
 					.enumerate()
 					.map(|(x, p)| {
 						if x == self.x && y == self.y {
@@ -258,8 +258,8 @@ impl std::fmt::Display for Grid {
 						}
 					})
 					.collect::<String>())
-				.intersperse("\n".to_string())
-				.collect::<String>()
+				.collect::<Vec<_>>()
+				.join("\n")
 		)
 	}
 }

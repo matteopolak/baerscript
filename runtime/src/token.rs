@@ -29,10 +29,10 @@ impl TryFrom<char> for Token {
 			'^' => Ok(Self::Up),
 			'v' => Ok(Self::Down),
 			'#' => Ok(Self::Comment),
-			'\u{0032}' | '\u{0009}' => Ok(Self::BlankSpace),
+			'\u{0020}' | '\u{0009}' => Ok(Self::BlankSpace),
 			'[' => Ok(Self::OpenSquareBracket),
 			']' => Ok(Self::ClosedSquareBracket),
-			c @ _ => Err(format!("Unknown character {c}")),
+			c => Err(format!("Unknown character {c}")),
 		}
 	}
 }
@@ -59,5 +59,17 @@ impl std::fmt::Display for Token {
 				Token::ClosedSquareBracket => "]",
 			}
 		)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn accepts_whitespace_but_not_digits() {
+		assert_eq!(Token::try_from(' '), Ok(Token::BlankSpace));
+		assert_eq!(Token::try_from('\t'), Ok(Token::BlankSpace));
+		assert!(Token::try_from('2').is_err());
 	}
 }

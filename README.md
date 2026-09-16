@@ -29,6 +29,20 @@ to [build from source with cargo](https://doc.rust-lang.org/cargo/commands/cargo
 cargo +nightly build --release
 ```
 
+## Browser / WebAssembly
+
+The `baerscript-wasm` workspace crate exposes a small synchronous `execute`
+function for browser playgrounds. Build its web-targeted JavaScript and Wasm
+bundle from the repository root with:
+
+```bash
+wasm-pack build wasm --target web --release --out-dir pkg
+```
+
+The generated entry point is `wasm/pkg/baerscript_wasm.js`, backed by
+`wasm/pkg/baerscript_wasm_bg.wasm`. See [the Wasm API guide](docs/wasm-api.md)
+for the runtime contract, worker integration, and timeout requirements.
+
 ### Pre-built Binaries
 
 Binaries are released on major releases for Windows platforms and can be located [in the releases tab](https://github.com/matteopolak/baerscript/releases).

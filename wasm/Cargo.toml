@@ -1,0 +1,20 @@
+[package]
+name = "baerscript-wasm"
+version = "0.1.0"
+edition = "2021"
+authors = ["Matthew Polak <contact@matteopolak.com>"]
+description = "Browser-embeddable WebAssembly API for BaerScript"
+license = "MIT"
+repository = "https://github.com/matteopolak/baerscript"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+js-sys = "0.3"
+runtime = { path = "../runtime" }
+wasm-bindgen = "0.2"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
