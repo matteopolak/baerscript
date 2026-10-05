@@ -7,6 +7,7 @@
 
 [BaerScript](https://github.com/matteopolak/baerscript) is an esoteric programming language built with Rust 🦀.
 Check out the docs [by clicking here](DOCUMENTATION.md).
+Try it in the browser at [matteopolak.com/playground/baerscript](https://matteopolak.com/playground/baerscript).
 
 ```bash
 Usage: baerscript [OPTIONS] <FILE>
